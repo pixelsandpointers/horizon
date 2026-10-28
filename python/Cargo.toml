@@ -1,0 +1,18 @@
+[package]
+name = "horizon-py"
+version = "0.1.0-alpha.0"
+edition = "2024"
+description = "Python bindings for horizon."
+license = "MIT OR Apache-2.0"
+publish = false
+
+[lib]
+name = "horizon"
+crate-type = ["cdylib"]
+
+[dependencies]
+hrzn = { package = "horizon", path = ".." }
+pyo3 = { version = "0.30.1", features = ["abi3-py310"] }
+
+# A workspace of its own, so that it builds independently of the main crate.
+[workspace]

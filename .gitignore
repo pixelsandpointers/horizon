@@ -6,3 +6,8 @@
 # already existing elements were commented out
 
 #/target
+
+/python/target
+/python/.venv
+/python/uv.lock
+__pycache__/
