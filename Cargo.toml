@@ -2,13 +2,14 @@
 name = "horizon"
 version = "0.1.0-alpha.0"
 edition = "2024"
-description = "A Rust Bayesian inference framework implementing message passing on factor graphs and MCMC."
+description = "A Rust Bayesian inference framework implementing message passing and MCMC on factor graphs (+Python bindings)."
 license = "MIT OR Apache-2.0"
 exclude = ["python"]
+keywords = ["bayesian", "inference", "message-passing", "factor-graph"]
+categories = ["science", "algorithms", "mathematics"]
 
 [dependencies]
 burn = { version = "0.22.1", default-features = false, features = ["std", "autodiff", "flex"] }
 rand = "0.9"
 
-# A workspace of its own, so that it builds independently of the main crate.
 [workspace]
