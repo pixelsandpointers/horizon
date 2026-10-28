@@ -2,6 +2,8 @@
 
 > This is alpha software. Please be aware that the API will change and may break things from time to time.
 
+Install via crates.io: `cargo add horizon`.
+
 NUTS sampling (+ RxInfer.jl message passing) on factor graphs, with analytic gradients for built-in nodes, and [burn](https://burn.dev)'s autodiff for nodes written with tensors. Currently AD doesn't work in Python.
 
 ```rust
@@ -41,3 +43,6 @@ uv sync                 # builds the extension into .venv
 uv run pytest
 uv run python examples/eight_schools.py
 ```
+
+## Acknowledgments
+The crate name was owned before by [Leonard Lesinski](https://github.com/Le0X8).
