@@ -8,6 +8,7 @@
 
 mod diagnostics;
 mod nuts;
+mod problem;
 mod transform;
 
 pub use diagnostics::{effective_sample_size, quantile, split_rhat};
