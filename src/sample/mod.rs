@@ -10,9 +10,11 @@ mod diagnostics;
 mod nuts;
 mod problem;
 mod samples;
+mod sampling;
 mod summary;
 mod transform;
 
 pub use diagnostics::{effective_sample_size, quantile, split_rhat};
 pub use samples::Samples;
+pub use sampling::Sampling;
 pub use summary::{Summary, SummaryRow};
