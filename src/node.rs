@@ -30,10 +30,12 @@ pub trait Node: Send + Sync {
         unimplemented!("`{}` has no log density", self.name())
     }
 
+    /// Whether interface 0 is a function of the others.
     fn is_deterministic(&self) -> bool {
         false
     }
 
+    /// The output of a deterministic node from the values of its other interfaces.
     fn forward(&self, inputs: &[Tensor<1>]) -> Tensor<1> {
         let _ = inputs;
         unimplemented!("`{}` is not deterministic", self.name())
