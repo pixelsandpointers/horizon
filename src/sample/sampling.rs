@@ -1,3 +1,5 @@
+use std::sync::atomic::{AtomicUsize, Ordering};
+
 use burn::tensor::Device;
 use rand::{Rng, SeedableRng, rngs::StdRng};
 
@@ -13,6 +15,7 @@ pub struct Sampling<'m> {
     model: &'m Model,
     device: Device,
     chains: usize,
+    threads: usize,
     warmup: usize,
     draws: usize,
     seed: u64,
@@ -27,6 +30,7 @@ impl Model {
             model: self,
             device: default_device(),
             chains: 4,
+            threads: std::thread::available_parallelism().map_or(1, |n| n.get()),
             warmup: 1000,
             draws: 1000,
             seed: 0,
@@ -45,6 +49,12 @@ impl Sampling<'_> {
     /// Number of chains (default 4), run in parallel.
     pub fn chains(mut self, n: usize) -> Self {
         self.chains = n.max(1);
+        self
+    }
+
+    /// Worker threads that chains are spread over (default: the available parallelism).
+    pub fn threads(mut self, n: usize) -> Self {
+        self.threads = n.max(1);
         self
     }
 
@@ -85,19 +95,35 @@ impl Sampling<'_> {
 
     pub fn run(self) -> Result<Samples> {
         let recorded = Problem::new(self.model, self.device.clone())?.recorded();
-        let outputs: Vec<Result<ChainOutput>> = std::thread::scope(|scope| {
-            let handles: Vec<_> = (0..self.chains)
-                .map(|c| {
-                    let (this, recorded) = (&self, &recorded);
-                    scope.spawn(move || this.run_chain(c, recorded))
+        // Workers take the next chain until none are left. Seeds depend only on the chain index,
+        // so draws do not depend on which worker ran a chain.
+        let next = AtomicUsize::new(0);
+        let mut outputs: Vec<(usize, Result<ChainOutput>)> = std::thread::scope(|scope| {
+            let handles: Vec<_> = (0..self.threads.min(self.chains))
+                .map(|_| {
+                    let (this, recorded, next) = (&self, &recorded, &next);
+                    scope.spawn(move || {
+                        let mut done = Vec::new();
+                        loop {
+                            let c = next.fetch_add(1, Ordering::Relaxed);
+                            if c >= this.chains {
+                                break done;
+                            }
+                            done.push((c, this.run_chain(c, recorded)));
+                        }
+                    })
                 })
                 .collect();
             handles
                 .into_iter()
-                .map(|h| h.join().expect("chain panicked"))
+                .flat_map(|h| h.join().expect("chain panicked"))
                 .collect()
         });
-        let outputs = outputs.into_iter().collect::<Result<Vec<_>>>()?;
+        outputs.sort_by_key(|&(c, _)| c);
+        let outputs = outputs
+            .into_iter()
+            .map(|(_, o)| o)
+            .collect::<Result<Vec<_>>>()?;
         Ok(Samples {
             names: recorded
                 .iter()
@@ -110,7 +136,7 @@ impl Sampling<'_> {
     }
 
     fn run_chain(&self, chain: usize, recorded: &[usize]) -> Result<ChainOutput> {
-        // Each chain builds its own tensors, on its own thread.
+        // Each chain builds its own tensors, on its worker's thread.
         let mut problem = Problem::new(self.model, self.device.clone())?;
         let mut rng = StdRng::seed_from_u64(
             self.seed
