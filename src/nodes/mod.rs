@@ -1,6 +1,7 @@
 //! Implements different nodes for distributions and functions to be used
 //! in the graphical model/factor graph.
 
+mod elementwise;
 mod function;
 mod normal_mean_variance;
 mod potential;

@@ -40,4 +40,25 @@ pub trait Node: Send + Sync {
         let _ = inputs;
         unimplemented!("`{}` is not deterministic", self.name())
     }
+
+    /// `log f(values)` and its gradient for each interface, without tensors. `None` (the
+    /// default) has sampling differentiate [`Node::log_density`] with burn instead.
+    fn log_density_grad(&self, values: &[&[f64]]) -> Option<(f64, Vec<Vec<f64>>)> {
+        let _ = values;
+        None
+    }
+
+    /// The output of a deterministic node, without tensors. `None` (the default) falls back to
+    /// [`Node::forward`].
+    fn forward_f64(&self, inputs: &[&[f64]]) -> Option<Vec<f64>> {
+        let _ = inputs;
+        None
+    }
+
+    /// The vector–Jacobian product `adjointᵀ ∂output/∂input` for each input of a deterministic
+    /// node. `None` (the default) has sampling differentiate [`Node::forward`] with burn instead.
+    fn vjp(&self, inputs: &[&[f64]], adjoint: &[f64]) -> Option<Vec<Vec<f64>>> {
+        let _ = (inputs, adjoint);
+        None
+    }
 }

@@ -23,17 +23,14 @@ fn main() {
     m.normal_mean_variance(mu, 0.0, 25.0);
 
     let tau = m.random("tau");
-    let half_cauchy = Potential::new(1, |x| {
-        let z = x[0].clone().div_scalar(5.0);
-        (z.clone() * z).add_scalar(1.0).log().neg()
-    })
-    .with_support(0, Support::Positive);
+    let half_cauchy = Potential::scalar(1, |x| -(1.0 + (x[0] / 5.0).powi(2)).ln())
+        .with_support(0, Support::Positive);
     m.potential(half_cauchy, [tau.into()]);
 
     let theta_raw = m.random_vec("theta_raw", y.len());
     m.normal_mean_variance(theta_raw, 0.0, 1.0);
     let theta = m.random_vec("theta", y.len());
-    let effect = Function::new(3, |x| x[0].clone() + x[1].clone() * x[2].clone());
+    let effect = Function::scalar(3, |x| x[0] + x[1] * x[2]);
     m.function(theta, effect, [mu.into(), tau.into(), theta_raw.into()]);
 
     let obs = m.data("y", &y[..]);

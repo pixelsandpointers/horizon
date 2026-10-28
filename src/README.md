@@ -1,6 +1,6 @@
 # horizon
 
-NUTS sampling (+ RxInfer.jl message passing) on factor graphs, with gradients from [burn](https://burn.dev)'s autodiff. 
+NUTS sampling (+ RxInfer.jl message passing) on factor graphs, with analytic gradients for built-in nodes, and [burn](https://burn.dev)'s autodiff for nodes written with tensors.
 
 ```rust
 use horizon::*;

@@ -1,7 +1,6 @@
 //! Bijections from unconstrained vectors to the supports of variables, as in NumPyro.
 
 use crate::node::Support;
-use crate::tensor::Tensor;
 
 /// Maps an unconstrained `y` to a constrained value `x`, elementwise.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -19,11 +18,24 @@ impl Transform {
         }
     }
 
-    /// The constrained value and `log |det ∂x/∂y|`, if it is not zero.
-    pub fn forward(self, y: Tensor<1>) -> (Tensor<1>, Option<Tensor<1>>) {
+    /// The constrained value `x`, and `log |det ∂x/∂y|`.
+    pub fn forward(self, y: &[f64]) -> (Vec<f64>, f64) {
         match self {
-            Self::Identity => (y, None),
-            Self::Exp => (y.clone().exp(), Some(y.sum())),
+            Self::Identity => (y.to_vec(), 0.0),
+            Self::Exp => (y.iter().map(|y| y.exp()).collect(), y.iter().sum()),
+        }
+    }
+
+    /// The gradient of a function of `x` and the log Jacobian with respect to `y`, from its
+    /// gradient `grad_x` with respect to `x`.
+    pub fn pullback(self, x: &[f64], grad_x: &[f64], grad_y: &mut [f64]) {
+        match self {
+            Self::Identity => grad_y.copy_from_slice(grad_x),
+            Self::Exp => {
+                for ((gy, gx), x) in grad_y.iter_mut().zip(grad_x).zip(x) {
+                    *gy = gx * x + 1.0;
+                }
+            }
         }
     }
 
