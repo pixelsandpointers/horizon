@@ -7,6 +7,7 @@
 //! Chains run in parallel.
 
 mod diagnostics;
+mod nuts;
 mod transform;
 
 pub use diagnostics::{effective_sample_size, quantile, split_rhat};
