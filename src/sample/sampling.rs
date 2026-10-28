@@ -97,6 +97,13 @@ impl Sampling<'_> {
         let recorded = Problem::new(self.model, self.device.clone())?.recorded();
         // Workers take the next chain until none are left. Seeds depend only on the chain index,
         // so draws do not depend on which worker ran a chain.
+        //
+        // TODO: batch chains into one tensor evaluation instead of one autodiff graph per chain.
+        // burn-autodiff takes a process-wide mutex (`GraphMutexClient`'s `STATE`) on every
+        // tracked op and after every `backward()`, so worker threads mostly contend on it: on
+        // eight schools, 4 threads are only ~1.2x faster than 1 for ~2.9x the CPU time, with about
+        // a quarter of it in that lock. Evaluating the log joint for all chains as one batched
+        // tensor would take the lock once per step, and also suits GPU devices.
         let next = AtomicUsize::new(0);
         let mut outputs: Vec<(usize, Result<ChainOutput>)> = std::thread::scope(|scope| {
             let handles: Vec<_> = (0..self.threads.min(self.chains))
