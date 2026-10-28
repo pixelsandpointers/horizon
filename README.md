@@ -7,7 +7,7 @@ Install via crates.io: `cargo add horizon`.
 NUTS sampling (+ RxInfer.jl message passing) on factor graphs, with analytic gradients for built-in nodes, and [burn](https://burn.dev)'s autodiff for nodes written with tensors. Currently AD doesn't work in Python.
 
 ```rust
-use horizon::*;
+use horizon::prelude::*;
 
 let mut m = Model::new();
 let mu = m.random("mu");

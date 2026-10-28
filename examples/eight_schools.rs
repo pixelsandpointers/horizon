@@ -7,9 +7,7 @@
 //!
 //! Run with `cargo run --release --example eight_schools`.
 
-use horizon::model::Model;
-use horizon::node::Support;
-use horizon::nodes::{Function, Potential};
+use horizon::prelude::*;
 
 fn main() {
     let y = [28.0, 8.0, -3.0, 7.0, -1.0, 1.0, 18.0, 12.0];
