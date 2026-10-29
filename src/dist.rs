@@ -31,11 +31,15 @@ impl Dist {
         }
     }
 
+    pub fn is_point_mass(&self) -> bool {
+        matches!(self, Self::PointMass(_))
+    }
+
     /// Normalised product of two densities: how messages arrive at a variable and combine.
     pub fn prod(&self, other: &Dist) -> Result<Dist> {
         let incompatible = || Error::IncompatibleProduct {
             left: self.family().to_string(),
-            right: self.family().to_string(),
+            right: other.family().to_string(),
         };
         Ok(match (self, other) {
             (Uninformative, d) | (d, Uninformative) => d.clone(),
