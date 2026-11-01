@@ -3,7 +3,7 @@ use crate::tensor::Tensor;
 
 /// `out ~ Normal(mean, variance)`, mean and variances are broadcasted against `out`.
 #[derive(Clone, Copy, Debug)]
-pub struct NormalMeanVariance;
+pub struct NormalMeanVariance; // TODO: probably want to rename this at some point
 
 impl Node for NormalMeanVariance {
     fn name(&self) -> &str {
