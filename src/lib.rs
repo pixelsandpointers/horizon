@@ -1,3 +1,4 @@
+pub mod dist;
 pub mod error;
 pub mod model;
 pub mod node;

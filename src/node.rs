@@ -1,12 +1,49 @@
 //! The factor node interface.
 
-use crate::tensor::Tensor;
+use crate::{dist::Dist, error::Result, tensor::Tensor};
 
 /// The set of values a variable can take, which sampling maps to an unconstrained space.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Support {
     Real,
     Positive,
+}
+
+/// What a node knows about one of its interfaces when computing a message.
+///
+/// Which variant an interface receives follows from the node's factorization constraint: an
+/// interface in the same cluster as the outgoing one, or in another cluster with several
+/// members, contributes its incoming *message* (belief propagation within a cluster); an interface
+/// in a cluster of its own contributes its *marginal* from the previous iteration (variational
+/// message passing between clusters). Constants and data always arrive as point-mass messages.
+#[derive(Clone, Copy, Debug)]
+pub enum Input<'a> {
+    /// The interface the rule computes a message for, with the message last sent out on it, or
+    /// `None` before the first update.
+    Outgoing(Option<&'a Dist>),
+    /// The message arriving at the node from the variable on this interface, as in belief
+    /// propagation.
+    Message(&'a Dist),
+    /// The current marginal of the variable on this interface, as variational rules use in
+    /// place of its incoming message.
+    Marginal(&'a Dist),
+}
+
+impl<'a> Input<'a> {
+    pub fn dist(&self) -> Option<&'a Dist> {
+        match *self {
+            Self::Message(d) | Self::Marginal(d) => Some(d),
+            Self::Outgoing(_) => None,
+        }
+    }
+
+    pub fn is_marginal_like(&self) -> bool {
+        match self {
+            Self::Marginal(_) => true,
+            Self::Message(d) => d.is_point_mass(),
+            Self::Outgoing(_) => false,
+        }
+    }
 }
 
 /// A factor node. Each interface's value arrives as a one-dimensional tensor of its entries.
@@ -28,6 +65,12 @@ pub trait Node: Send + Sync {
     fn log_density(&self, values: &[Tensor<1>]) -> Tensor<1> {
         let _ = values;
         unimplemented!("`{}` has no log density", self.name())
+    }
+
+    /// Implements the message passing rule for the node.
+    fn rule(&self, interface: usize, inputs: &[Input]) -> Result<Dist> {
+        let _ = (interface, inputs);
+        unimplemented!("`{}` has no rule attached", self.name())
     }
 
     /// Whether interface 0 is a function of the others.
